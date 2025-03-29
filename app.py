@@ -1,18 +1,19 @@
-from flask import Flask, render_template
+from flask import Flask
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import datetime
+import os
 
 app = Flask(__name__)
 CORS(app)
-app.config['SECRET_KEY'] = 'your-secret-key'
-socketio = SocketIO(app, cors_allowed_origins="*")  # Cho phép mọi nguồn truy cập
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-rooms = {}  # Lưu thông tin phòng và người dùng trong phòng
+rooms = {}
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return "Backend is running. Connect from the frontend."
 
 @socketio.on('connect')
 def handle_connect():
@@ -35,14 +36,11 @@ def handle_disconnect():
 def handle_join_room(data):
     username = data['username']
     room_id = data['room_id']
-    
     if room_id not in rooms:
         rooms[room_id] = {}
-    
     join_room(room_id)
     rooms[room_id][username] = request.sid
     emit('user_joined', {'username': username}, room=room_id)
-    # Gửi danh sách người dùng trong phòng
     emit('user_list', {'users': list(rooms[room_id].keys())}, room=room_id)
 
 @socketio.on('message')
@@ -60,5 +58,4 @@ def handle_get_rooms():
     emit('room_list', {'rooms': list(rooms.keys())})
 
 if __name__ == '__main__':
-    # Chạy trên 0.0.0.0 để cho phép truy cập từ mọi IP
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
