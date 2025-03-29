@@ -2,5 +2,5 @@ Flask==2.3.2
 Flask-SocketIO==5.3.4
 Flask-Cors==4.0.0
 python-socketio==5.8.0
-eventlet==0.30.2 
+gevent==23.9.1  # Thay eventlet bằng gevent
 gunicorn==20.1.0
